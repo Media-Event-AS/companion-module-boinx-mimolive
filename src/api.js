@@ -115,7 +115,7 @@ export default {
 										activeVariant: message.data.relationships['active-variant'].data.id,
 										liveState: message.data.attributes['live-state'],
 										volume: message.data.attributes['volume'],
-										index: message.data.attributes.index
+										index: message.data.attributes.index,
 									}
 								} else {
 									parentDocument.layers[layerIndex].id = message.id
@@ -302,9 +302,9 @@ export default {
 	},
 
 	/**
-	* Send a REST GET request to the player and handle errorcodes
-	* @param  {} cmd
-	*/
+	 * Send a REST GET request to the player and handle errorcodes
+	 * @param  {} cmd
+	 */
 	sendGetRequest: async function (cmd) {
 		// Trim off any leading / characters
 		while (cmd.startsWith('/')) {
@@ -326,12 +326,12 @@ export default {
 		}
 		this.processResult(response)
 	},
-	
+
 	/**
-	* Send a REST PUT request to the player and handle errorcodes
-	* @param  {} cmd
-	* @param	{} payload
-	*/
+	 * Send a REST PUT request to the player and handle errorcodes
+	 * @param  {} cmd
+	 * @param	{} payload
+	 */
 	sendPutRequest: async function (cmd, payload) {
 		// Trim off any leading / characters
 		while (cmd.startsWith('/')) {
@@ -355,7 +355,51 @@ export default {
 		this.gotOptions.json = undefined
 		this.processResult(response)
 	},
-	
+
+	/**
+	 * Send a GET request with update parameter to update layer input values
+	 * @param {string} endpoint - The variant endpoint
+	 * @param {string} fieldName - The input-value field name to update
+	 * @param {string} value - The value to set
+	 */
+	sendUpdateRequest: async function (endpoint, fieldName, value) {
+		// Trim off any leading / characters
+		let cmd = endpoint
+		while (cmd.startsWith('/')) {
+			cmd = cmd.slice(1)
+		}
+		// Append the API slug if it is not already present
+		if (cmd.startsWith(this.apiSlug) == false) {
+			cmd = this.apiSlug + cmd
+		}
+
+		// Build the update object and URL-encode it
+		const updateObj = { 'input-values': { [fieldName]: value } }
+		const updateParam = encodeURIComponent(JSON.stringify(updateObj))
+
+		// Construct the full URL with query parameters
+		const url = `${cmd}?include=data.attributes.input-values&fields[input-values]=${fieldName}&update=${updateParam}`
+
+		this.log('debug', `REST GET with update: ${url}`)
+		this.gotOptions.method = 'GET'
+		let response
+		try {
+			response = await got(url, undefined, this.gotOptions)
+		} catch (error) {
+			this.log('error', `Update request failed: ${error.message}`)
+			this.processError(error)
+			return
+		}
+
+		// Check for successful response
+		if (response.statusCode === 200) {
+			this.updateStatus(InstanceStatus.Ok)
+			this.log('debug', `Successfully updated ${fieldName} to: ${value}`)
+		} else {
+			this.log('warning', `Update request returned status ${response.statusCode}`)
+		}
+	},
+
 	/**
 	 * INTERNAL: Callback for REST calls to process the return
 	 *
@@ -436,7 +480,7 @@ export default {
 					liveVariant: '',
 					liveState: data[layer].attributes['live-state'],
 					volume: data[layer].attributes['volume'],
-					index: data[layer].attributes.index
+					index: data[layer].attributes.index,
 				}
 				this.sendGetRequest(`documents/${parentDocId}/layers/${data[layer].id}/variants`)
 			}

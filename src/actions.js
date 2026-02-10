@@ -215,6 +215,61 @@ export default {
 			},
 		}
 
+		actions['setLayerInputValue'] = {
+			name: 'Set Layer Input Value',
+			description: 'Update layer input-value fields (e.g., text content) using Companion variables',
+			options: [
+				{
+					type: 'textinput',
+					label: 'Variant Endpoint',
+					id: 'endpoint',
+					default: '',
+					tooltip:
+						'Full API endpoint to layer variant (copy from mimoLive or use format: /api/v1/documents/{docId}/layers/{layerId}/variants/{variantId})',
+					regex: `/${this.REGEX_VARIANT}/`,
+				},
+				{
+					type: 'textinput',
+					label: 'Input Field Name',
+					id: 'fieldName',
+					default: 'tvGroup_Content__Text_TypeMultiline',
+					tooltip: 'Common fields: tvGroup_Content__Text_TypeMultiline (for most text layers)',
+				},
+				{
+					type: 'textinput',
+					label: 'Value',
+					id: 'value',
+					default: '$(mukana:active_question_username)',
+					tooltip:
+						'Text or Companion variables. For News Crawl layers, use | and \\n separators (e.g., "Title 1|Description 1\\nTitle 2|Description 2")',
+					useVariables: true,
+				},
+			],
+			callback: async (action) => {
+				const opt = action.options
+
+				// Validate variant endpoint
+				if (!opt.endpoint || opt.endpoint === '') {
+					this.log('warning', 'Set Layer Input Value: No variant endpoint specified')
+					return
+				}
+
+				// Validate field name
+				if (!opt.fieldName || opt.fieldName === '') {
+					this.log('warning', 'Set Layer Input Value: No field name specified')
+					return
+				}
+
+				// Parse variables in the value field
+				const resolvedValue = await this.parseVariablesInString(opt.value)
+
+				this.log('debug', `Setting ${opt.fieldName} to: ${resolvedValue}`)
+
+				// Send the update request
+				this.sendUpdateRequest(opt.endpoint, opt.fieldName, resolvedValue)
+			},
+		}
+
 		return actions
 	},
 }

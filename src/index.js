@@ -59,7 +59,7 @@ class MimoLiveInstance extends InstanceBase {
 
 		this.REGEX_DOCUMENT = '(^[0-9]+$)|(/api/v1/documents/([0-9]+))'
 		this.REGEX_LAYER = '^([0-9]+,[0-9]+)|(/api/v1/documents/([0-9]+)/layers/([0-9-A-Z]+))$'
-		this.REGEX_VARIANT = '^/api/v1/documents/([0-9]+)/layers/([0-9-A-Z]+)/variants/([0-9-A-Z]+)$'
+		this.REGEX_VARIANT = '^/api/v1/documents/([0-9]+)/layers/([0-9A-Za-z-]+)(?:/variants/([0-9A-Za-z-]+))?$'
 		this.REGEX_OUTPUT = '^/api/v1/documents/([0-9]+)/output-destinations/([0-9-A-Z]+)$'
 		this.REGEX_LAYERSET = '^/api/v1/documents/([0-9]+)/layer-sets/([0-9-A-Z]+)$'
 		this.REGEX_ENDPOINT = '(^[0-9]+$)|(/api/v1/([0-9-A-Z-a-z/_]+))'
