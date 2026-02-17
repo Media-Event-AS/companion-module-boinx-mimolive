@@ -88,15 +88,31 @@ export default {
 			},
 		}
 
+		// Build layer set dropdown choices: document › layer set name
+		const layerSetChoices = []
+		;(this.documents || []).forEach((doc) => {
+			(doc.layerSets || []).forEach((set) => {
+				layerSetChoices.push({
+					id: `/api/v1/documents/${doc.id}/layer-sets/${set.id}`,
+					label: `${doc.label} › ${set.label}`,
+				})
+			})
+		})
+		if (layerSetChoices.length === 0) {
+			layerSetChoices.push({ id: '', label: '(Connect to mimoLive to see layer sets)' })
+		}
+
 		actions['layerSet'] = {
 			name: 'Layer Set Recall',
 			options: [
 				{
-					type: 'textinput',
-					label: 'API Endpoint',
+					type: 'dropdown',
+					label: 'Layer Set',
 					id: 'endpoint',
-					default: '',
-					tooltip: 'Enter the API endpoint from the layer to control',
+					choices: layerSetChoices,
+					default: layerSetChoices[0]?.id ?? '',
+					tooltip: 'Select a layer set to recall',
+					allowCustom: true,
 					regex: `/${this.REGEX_LAYERSET}/`,
 				},
 			],
@@ -215,17 +231,50 @@ export default {
 			},
 		}
 
+		// Build variant/layer dropdown choices: layers with 2+ variants show nested variant options;
+		// layers with 0 or 1 variant use the layer endpoint directly (mimoLive API returns a default
+		// variant for every layer, so length===1 does not mean user-visible variants).
+		const variantChoices = []
+		;(this.documents || []).forEach((doc) => {
+			const layers = (doc.layers || []).filter(Boolean)
+			layers
+				.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+				.forEach((layer) => {
+					const docLayerLabel = `${doc.label} › ${layer.label}`
+					if (layer.variants && layer.variants.length > 1) {
+						// Layer has multiple variants: only variants are selectable, show nested with indent
+						layer.variants.forEach((variant) => {
+							variantChoices.push({
+								id: `/api/v1/documents/${doc.id}/layers/${layer.id}/variants/${variant.id}`,
+								label: `  ${docLayerLabel} › ${variant.label}`,
+							})
+						})
+					} else {
+						// Layer has 0 or 1 variant: use layer endpoint (no /variants/ in path)
+						variantChoices.push({
+							id: `/api/v1/documents/${doc.id}/layers/${layer.id}`,
+							label: docLayerLabel,
+						})
+					}
+				})
+		})
+		if (variantChoices.length === 0) {
+			variantChoices.push({ id: '', label: '(Connect to mimoLive to see layers)' })
+		}
+
 		actions['setLayerInputValue'] = {
 			name: 'Set Layer Input Value',
 			description: 'Update layer input-value fields (e.g., text content) using Companion variables',
 			options: [
 				{
-					type: 'textinput',
-					label: 'Variant Endpoint',
+					type: 'dropdown',
+					label: 'Variant',
 					id: 'endpoint',
-					default: '',
+					choices: variantChoices,
+					default: variantChoices[0]?.id ?? '',
 					tooltip:
-						'Full API endpoint to layer variant (copy from mimoLive or use format: /api/v1/documents/{docId}/layers/{layerId}/variants/{variantId})',
+						'Select a layer (no variants) or layer variant. Layers with variants show their variants indented; only variants are selectable.',
+					allowCustom: true,
 					regex: `/${this.REGEX_VARIANT}/`,
 				},
 				{

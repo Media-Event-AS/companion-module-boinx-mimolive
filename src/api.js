@@ -128,6 +128,7 @@ export default {
 								this.log('debug', `Layer: ${message.data.attributes.name} is ${message.data.attributes['live-state']}`)
 								this.updateLayerVariables()
 								this.checkFeedbacks('layerStatus')
+								this.initActions()
 								break
 							case 'removed':
 								let doc
@@ -139,6 +140,7 @@ export default {
 										this.documents[doc].layers.splice(layerIndex, 1)
 										this.checkFeedbacks('layerStatus')
 										this.updateVariableDefinitions()
+										this.initActions()
 									}
 								}
 								break
@@ -157,6 +159,7 @@ export default {
 											label: message.data.attributes.name,
 											liveState: message.data.attributes['live-state'],
 										})
+										this.initActions()
 									}
 								} catch (err) {
 									this.log('error', 'Error adding variant' + JSON.stringify(err))
@@ -170,6 +173,7 @@ export default {
 										variant.label = message.data.attributes.name
 										variant.liveState = message.data.attributes['live-state']
 										this.checkFeedbacks('variantStatus')
+										this.initActions()
 									}
 								} catch (err) {
 									this.log('error', 'Error changing variant' + JSON.stringify(err))
@@ -187,6 +191,7 @@ export default {
 											if (variantIndex >= 0) {
 												this.documents[doc].layers[layer].variants.splice(variantIndex, 1)
 												this.checkFeedbacks('variantStatus')
+												this.initActions()
 											}
 										}
 									}
@@ -218,14 +223,16 @@ export default {
 									active: message.data.attributes.active,
 								})
 								this.checkFeedbacks('layerSetStatus')
+								this.initActions()
 								break
 							case 'removed':
 								let doc
 								for (doc in this.documents) {
 									let setIndex = this.documents[doc].layerSets.findIndex((element) => element.id === message.id)
 									if (setIndex >= 0) {
-										this.documents[doc].layers.splice(setIndex, 1)
+										this.documents[doc].layerSets.splice(setIndex, 1)
 										this.checkFeedbacks('layerSetStatus')
+										this.initActions()
 									}
 								}
 								break
@@ -487,6 +494,7 @@ export default {
 			// this.debug('Layers:', parentDoc)
 			this.updateVariableDefinitions()
 			this.checkFeedbacks('layerStatus')
+			this.initActions()
 			return
 		}
 
@@ -511,6 +519,7 @@ export default {
 			// this.debug('Layers:', parentDoc)
 			this.updateVariableDefinitions()
 			this.checkFeedbacks('variantStatus')
+			this.initActions()
 			return
 		}
 
@@ -531,6 +540,7 @@ export default {
 			}
 			//	 this.debug('Layers:', parentDoc)
 			this.checkFeedbacks('layerSetStatus')
+			this.initActions()
 			return
 		}
 
