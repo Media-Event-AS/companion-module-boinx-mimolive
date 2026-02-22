@@ -16,6 +16,10 @@ mimoLive records and streams simultaneously to various services and locations.
 - Layer Set Recall
 - Set Layer Volume
 - Set Layer Input Value (update text content and other input fields)
+- Set Split Screen Sources (assign Zoom sources to positions A–H on a split-screen layer variant)
+- Set split screen from raised hands (role-aware host/reader/panelists, hand-count mode, question mode layer-set mapping, live-safe queue, optional auto-live delay)
+- Set Split Screen Host+Reader (set positions 1 and 2 from config Host/Reader Zoom UUIDs)
+- Build Panel Mapping (read hand UID/name from variables, fuzzy-match to Zoom sources; first hand = Host, second = Reader; save mapping and Host/Reader to config)
 - Trigger a Generic Endpoint
 
 ### Supported feedback
@@ -36,26 +40,40 @@ Dynamic variables are generated for all open documents, and can be accessed usin
 - Layer active variant name
 - Layer volume (when present)
 
-### Zoom sources (module extension planned)
+### Zoom sources
 
-The module will be extended to **fetch** document sources from the mimoLive API (`GET /api/v1/documents/{docId}/sources`) and **filter to Zoom Input sources only**. Zoom participants are identified by the attribute **`source-type`** equal to **`com.boinx.mimoLive.sources.zoomparticipant`** on each source object (drill into the sources response and filter by this node type). Only those sources will be listed so dropdowns and mapping UIs show just Zoom participants (e.g. for Split Screen source selection and Mukana panelist mapping). Optional fallback: if `source-type` is missing, treat as Zoom when name or other attributes contain "zoom" or "meeting". Reference: QueOnDeck-mimoLive `services/mimolive-init.js` (lines 268–310).
+The module **fetches** document sources from the mimoLive API (`GET /api/v1/documents/{docId}/sources`) when documents are loaded and **filters to Zoom Input sources only**. Zoom participants are identified by the attribute **`source-type`** equal to **`com.boinx.mimoLive.sources.zoomparticipant`**. If `source-type` is missing, sources are treated as Zoom when name or other attributes contain "zoom" or "meeting". Filtered Zoom sources are stored per document in `document.zoomSources` (each entry has `id`, `label`, `uuid`) for use in Host/Reader dropdowns, Set Split Screen actions, and Mukana panelist mapping.
 
-### Split Screen + Mukana integration (planned)
+### Split Screen + Raised Hands integration
 
-To drive Split Screen layers from Mukana raised hands, the mimoLive module will store and use a **panelist mapping** (Mukana UID → Zoom UUID). Panelists should use the same name in Mukana and Zoom.
+To drive Split Screen layers from raised hands (Mukana, QueOnDeck, or other modules), the mimoLive module will store and use a **panelist mapping** (hand UID → Zoom UUID). Panelists should use the same name in the source module and Zoom.
 
 **Config (mimoLive instance)**:
-- **Mukana instance** – Which Mukana instance to read variables from (`hand_1_uid`..`hand_8_uid`, `hand_1_name`..`hand_8_name`, `active_question_comment`)
-- **Test question match string** – When the active question text contains this string (e.g. "Test" or "Raise hands"), the system is in **initialization/mapping mode**. Mukana exposes `active_question_comment` for comparison
-- **Host Zoom UUID** / **Reader Zoom UUID** – Fixed positions 1 and 2
-- **Panelist mapping** – Table of Mukana UID → Zoom UUID; built by fuzzy name matching with manual override
+- **Variable source** – Choose between Mukana, QueOnDeck, or Custom module for hand variables.
+- **Custom prefix** – When "Custom" is selected, specify the instance name for variables like $(MyModule:hand_1_uid).
+- **Host Zoom UUID** / **Reader Zoom UUID** – Fixed positions 1 and 2. Set automatically by Build Panel Mapping (first hand = Host, second = Reader) or enter manually.
+- **Panelist mapping (JSON)** – Hand UID → Zoom UUID; built by Build Panel Mapping or entered manually.
+- **Test question match string** – Use in **triggers**: create a trigger whose condition is “variable `active_question_comment` contains this string”, action = Build Panel Mapping. **Multiple commands**: create multiple triggers with different match strings and different actions (e.g. "Test" → Build Mapping, "Break" → another action).
+- **Layer set by hand count (JSON)** – Optional. Map hand count → layer set endpoint, e.g. `{"2":"/api/v1/.../layer-sets/abc","4":"/api/v1/.../def"}`. Used when action mode = “Recall layer set by hand count”.
+- **Question layer set by document (JSON)** – For `2 UP + Q` flow. Map document ID → question layer-set endpoint.
+- **Question split-screen layer by document (JSON)** – Optional. Map document ID → split-screen layer endpoint inside question mode.
+- **Auto-live enabled by default** – Enabled by default, but can be disabled globally in config and overridden per action.
+- **Auto-live delay (ms)** – Delay before take-live to allow input updates to settle (default 200 ms).
+- **Layout overrides (separate fields)** – Optional per-layout overrides: `1`..`8`, `1up_s`, `2up_q`. Use one line per source in format `left,bottom,width,height`; use `\n` between lines.
 
-**Build panel mapping** (action, planned):
-- **Triggered by**: Stream Deck button, test-question trigger (when question text matches), or on demand
-- **Process**: Reads Mukana variables; fetches Zoom sources; fuzzy-matches `hand_X_name` to Zoom source names; suggests mapping; operator confirms/overrides in config and saves
-- **Re-runnable anytime** – New panelists arriving, mapping wrong: re-run by button, trigger, or manual edit
+**Build panel mapping** (action):
+- **Triggered by**: Stream Deck button, test-question trigger, or on demand
+- **Process**: Configure the action with variable references for Hand 1–8 UID and Hand 1–8 Name (e.g. `$(Mukana:hand_1_uid)`, `$(QueOnDeck:hand_1_name)`, etc. based on your variable source setting). Select the document whose Zoom sources to use. On run, the action reads current hand UIDs and names, fuzzy-matches names to Zoom source names, and **saves** the resulting mapping to the **Panelist mapping (JSON)** config field (existing entries are preserved; matched hands are updated).
+- **Re-runnable anytime** – New panelists or wrong match: run again or edit the JSON in config manually.
 
-**Set Split Screen from Mukana Hands** (action, planned): Reads `hand_1_uid`..`hand_8_uid` and hand count from Mukana; looks up Zoom UUID per position from mapping; selects layer set by hand count; sets each split-screen position to the corresponding Zoom source.
+**Set split screen from raised hands** (action):
+- Configure the eight "Hand N UID" fields with variable references (e.g. `$(Mukana:hand_1_uid)` or `$(QueOnDeck:hand_1_uid)` based on your variable source).
+- Choose **By hand count mode**: None / Recall layer set / Apply custom layout.
+- Optionally include fixed **Host** and **Reader** from config.
+- Overflow rule: split-screen supports max 8 sources; if needed, newest panelists are dropped first.
+- If the target split-screen layer is live, updates are queued and applied when the layer is no longer live.
+- Auto-live is enabled by default (can be forced on/off per action) with delay support.
+- For `2 UP + Q`, the action uses explicit question-layer-set mapping by document and treats question graphics/text/QR as separate layers.
 
 For the full Mukana + mimoLive workflow, see **MUKANA_MIMOLIVE_WORKFLOW.md** in the companion-module-mukana repo.
 
@@ -89,11 +107,11 @@ This action allows you to update layer input-value fields, such as text content 
    - Field: `tvGroup_Content__Text_TypeMultiline`
    - Value: `Breaking News`
 
-2. **Using Mukana variables:**
+2. **Using raised hands variables:**
 
    - Variant: `/api/v1/documents/580012725/layers/0E37EF43-0BCE-4F27-A657-3A78A1F679ED/variants/EE44A5A8-2EA2-4003-ACE3-D1AAEBBF7211`
    - Field: `tvGroup_Content__Text_TypeMultiline`
-   - Value: `$(mukana:active_question_username) - $(mukana:active_question_location)`
+   - Value: `$(mukana:active_question_username) - $(mukana:active_question_location)` or `$(queondeck:active_question_username) - $(queondeck:active_question_location)`
 
 3. **News Crawl formatting:**
    - For News Crawl layers, use `|` to separate title from description and `\n` to separate entries:

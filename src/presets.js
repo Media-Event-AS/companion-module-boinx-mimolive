@@ -266,6 +266,104 @@ export default {
 		}
 
 		/**
+		 * Mukana integration presets (configure endpoint/variant after adding to a button)
+		 */
+		presets['mukanaQuestionStarted'] = {
+			type: 'button',
+			category: 'Mukana',
+			name: 'Question started',
+			style: {
+				text: 'Question started',
+				size: '18',
+				color: whiteColor,
+				bgcolor: blackColor,
+			},
+			steps: [
+				{
+					down: [
+						{ actionId: 'layerSet', options: { endpoint: '' } },
+						{ actionId: 'setHostReader', options: { endpoint: '' } },
+					],
+					up: [],
+				},
+			],
+		}
+		presets['mukanaHandBecameActive'] = {
+			type: 'button',
+			category: 'Mukana',
+			name: 'Hand became active',
+			style: {
+				text: 'Hand became active',
+				size: '18',
+				color: whiteColor,
+				bgcolor: blackColor,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'setSplitScreenFromMukanaHands',
+							options: {
+								endpoint: '',
+								recallLayerSetByHandCount: false,
+								handCountVariable: '$(mukana:hand_count_total)',
+								hand_1_uid: '$(mukana:hand_1_uid)',
+								hand_2_uid: '',
+								hand_3_uid: '',
+								hand_4_uid: '',
+								hand_5_uid: '',
+								hand_6_uid: '',
+								hand_7_uid: '',
+								hand_8_uid: '',
+							},
+						},
+					],
+					up: [],
+				},
+			],
+		}
+		presets['mukanaBuildMapping'] = {
+			type: 'button',
+			category: 'Mukana',
+			name: 'Build panel mapping',
+			style: {
+				text: 'Build mapping',
+				size: '18',
+				color: whiteColor,
+				bgcolor: blackColor,
+			},
+			steps: [
+				{
+					down: [
+						{
+							actionId: 'buildPanelMapping',
+							options: {
+								documentId: '',
+								hand_1_uid: '$(mukana:hand_1_uid)',
+								hand_1_name: '$(mukana:hand_1_name)',
+								hand_2_uid: '',
+								hand_2_name: '',
+								hand_3_uid: '',
+								hand_3_name: '',
+								hand_4_uid: '',
+								hand_4_name: '',
+								hand_5_uid: '',
+								hand_5_name: '',
+								hand_6_uid: '',
+								hand_6_name: '',
+								hand_7_uid: '',
+								hand_7_name: '',
+								hand_8_uid: '',
+								hand_8_name: '',
+							},
+						},
+					],
+					up: [],
+				},
+			],
+		}
+
+		/**
 		 * Outputpresets
 		 */
 		presets[`output`] = {
