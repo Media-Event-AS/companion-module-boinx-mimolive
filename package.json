@@ -1,5 +1,5 @@
 {
-	"name": "boinx-mimolive",
+	"name": "media-event-mimolive",
 	"version": "2.0.0",
 	"main": "src/index.js",
 	"type": "module",
@@ -11,7 +11,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/bitfocus/companion-module-boinx-mimolive.git"
+		"url": "git+https://github.com/Media-Event-AS/companion-module-boinx-mimolive.git"
 	},
 	"engines": {
 		"node": "^22.20",

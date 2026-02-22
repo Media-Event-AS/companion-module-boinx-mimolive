@@ -1,19 +1,19 @@
 {
-	"id": "boinx-mimolive",
-	"name": "boinx-mimolive",
+	"id": "media-event-mimolive",
+	"name": "media-event-mimolive",
 	"shortname": "mimoLive",
-	"description": "Module to control mimoLive",
+	"description": "Module to control mimoLive (Media Event fork)",
 	"version": "0.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-boinx-mimolive.git",
-	"bugs": "https://github.com/bitfocus/companion-module-boinx-mimolive/issues",
+	"repository": "git+https://github.com/Media-Event-AS/companion-module-boinx-mimolive.git",
+	"bugs": "https://github.com/Media-Event-AS/companion-module-boinx-mimolive/issues",
 	"maintainers": [
 		{
-			"name": "Stephen Harrison",
-			"email": "stephen@redleopard.org"
+			"name": "Media Event",
+			"email": "support@mediaevent.no"
 		}
 	],
-	"legacyIds": [],
+	"legacyIds": ["boinx-mimolive"],
 	"runtime": {
 		"type": "node22",
 		"api": "nodejs-ipc",
